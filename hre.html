@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpinionBox - Feedback Collector</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #b3ecff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .page {
+    display: none;
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    width: 350px;
+    text-align: center;
+    animation: fadeIn 0.5s;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+  h1,h2,p {margin: 10px 0;}
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: none;
+    border-radius: 10px;
+    background: #e6f5ff;
+  }
+  .btn {
+    width: 100%;
+    padding: 10px;
+    background: #00bfff;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .btn:hover { background: #0099cc; }
+  .social img {
+    width: 30px;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  .rating span {
+    font-size: 25px;
+    cursor: pointer;
+  }
+  .recommend button {
+    background: #cceeff;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 15px;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  .tick {
+    font-size: 70px;
+    color: #00bfff;
+    margin-bottom: 10px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  th {
+    background: #00bfff;
+    color: white;
+  }
+
+  /* UPDATED ADMIN DASHBOARD CARD */
+  #adminDashboardPage {
+    width: 500px; /* আগের 350px থেকে বড় করা হলো */
+    padding: 30px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Welcome Card -->
+<div id="welcomePage" class="page" style="display:block;">
+  <h1>Welcome to OpinionBox 🎉</h1>
+  <p>Share your thoughts & help us improve.</p>
+  <button class="btn" onclick="goToUserLogin()">User Login</button>
+  <button class="btn" style="background:#0099cc;" onclick="goToAdminLogin()">Admin Login</button>
+</div>
+
+<!-- User Login Card -->
+<div id="userLoginPage" class="page">
+  <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" width="70" style="border-radius:50%; margin-bottom:10px;">
+  <input type="text" placeholder="Username" id="userUsername">
+  <input type="password" placeholder="Password" id="userPassword">
+  <button class="btn" onclick="userLogin()">Sign In</button>
+  <button class="btn" style="margin-top:10px; background:#ccc; color:#333;" onclick="backToWelcome()">Back</button>
+</div>
+
+<!-- Feedback Form Card -->
+<div id="feedbackPage" class="page">
+  <h2 style="color:#006080;">Give Us Your Valuable Feedback</h2>
+  <input type="text" placeholder="Name" id="fbName">
+  <input type="email" placeholder="E-mail" id="fbEmail">
+  <div class="rating">
+    <span onclick="selectStar(1)">⭐</span>
+    <span onclick="selectStar(2)">⭐</span>
+    <span onclick="selectStar(3)">⭐</span>
+    <span onclick="selectStar(4)">⭐</span>
+    <span onclick="selectStar(5)">⭐</span>
+  </div>
+  <textarea rows="4" placeholder="Your Feedback" id="fbComment"></textarea>
+  <div class="recommend">
+    <p>Would You Recommend Us?</p>
+    <button onclick="setRecommend('Yes')">Yes</button>
+    <button onclick="setRecommend('No')">No</button>
+  </div>
+  <button class="btn" onclick="submitFeedback()">SUBMIT</button>
+</div>
+
+<!-- Success Card -->
+<div id="successPage" class="page">
+  <div class="tick">✔️</div>
+  <p style="font-size:18px;">Your Feedback is Successfully Submitted.</p>
+  <button class="btn" onclick="backToWelcome()">Go Back To Home</button>
+</div>
+
+<!-- Admin Login Card -->
+<div id="adminLoginPage" class="page">
+  <h2>Admin Login</h2>
+  <!-- Username: admin, Password: admin12345 -->
+  <input type="text" placeholder="Username" id="adminUsername">
+  <input type="password" placeholder="Password" id="adminPassword">
+  <button class="btn" onclick="adminLogin()">Sign In</button>
+  <button class="btn" style="margin-top:10px; background:#ccc; color:#333;" onclick="backToWelcome()">Back</button>
+</div>
+
+<!-- Admin Dashboard Card -->
+<div id="adminDashboardPage" class="page">
+  <h2>All User Feedback</h2>
+  <table id="feedbackTable">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Rating</th>
+        <th>Comment</th>
+        <th>Recommend</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <button class="btn" style="margin-top:10px;" onclick="backToWelcome()">Back to Home</button>
+</div>
+
+<script>
+let feedbacks = [];
+let selectedRating = 0;
+let recommendAnswer = "";
+
+function hideAll() {
+  ['welcomePage','userLoginPage','feedbackPage','successPage','adminLoginPage','adminDashboardPage'].forEach(id=>{
+    document.getElementById(id).style.display='none';
+  });
+}
+
+// Welcome → User/Admin
+function goToUserLogin(){ hideAll(); document.getElementById('userLoginPage').style.display='block'; }
+function goToAdminLogin(){ hideAll(); document.getElementById('adminLoginPage').style.display='block'; }
+function backToWelcome(){ hideAll(); document.getElementById('welcomePage').style.display='block'; }
+
+// User Login
+function userLogin(){
+  const username = document.getElementById('userUsername').value.trim();
+  const password = document.getElementById('userPassword').value.trim();
+  if(username && password){
+    hideAll();
+    document.getElementById('feedbackPage').style.display='block';
+  } else {
+    alert("Please enter username and password");
+  }
+}
+
+// Feedback Form
+function selectStar(num){
+  selectedRating = num;
+  let stars = document.querySelectorAll('.rating span');
+  stars.forEach((s, i) => { s.textContent = (i < num) ? '⭐' : '☆'; });
+}
+function setRecommend(ans){ recommendAnswer = ans; alert("You selected: "+ans); }
+
+function submitFeedback(){
+  const name = document.getElementById('fbName').value.trim();
+  const email = document.getElementById('fbEmail').value.trim();
+  const comment = document.getElementById('fbComment').value.trim();
+  if(!name || !email || !comment || selectedRating===0 || !recommendAnswer){
+    alert("Please fill all fields and select rating/recommendation");
+    return;
+  }
+  feedbacks.push({name,email,rating:selectedRating,comment,recommend:recommendAnswer});
+  // Reset
+  document.getElementById('fbName').value="";
+  document.getElementById('fbEmail').value="";
+  document.getElementById('fbComment').value="";
+  selectedRating = 0; recommendAnswer="";
+  document.querySelectorAll('.rating span').forEach(s=>s.textContent='⭐');
+  hideAll();
+  document.getElementById('successPage').style.display='block';
+}
+
+// Admin Login
+function adminLogin(){
+  const username = document.getElementById('adminUsername').value.trim();
+  const password = document.getElementById('adminPassword').value.trim();
+  // Correct credentials: username=admin, password=admin12345
+  if(username==='admin' && password==='admin12345'){
+    showAdminDashboard();
+  } else {
+    alert("Incorrect username or password");
+  }
+}
+
+function showAdminDashboard(){
+  hideAll();
+  document.getElementById('adminDashboardPage').style.display='block';
+  const tbody = document.querySelector('#feedbackTable tbody');
+  tbody.innerHTML = "";
+  feedbacks.forEach(fb=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${fb.name}</td><td>${fb.email}</td><td>${fb.rating}</td><td>${fb.comment}</td><td>${fb.recommend}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+</script>
+
+</body>
+</html>
